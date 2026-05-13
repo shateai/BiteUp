@@ -14,8 +14,9 @@ import {
   MessageCircle, 
   Share2, 
   MoreHorizontal,
-  Flame,
-  Globe
+  SendHorizontal,
+  Globe,
+  X
 } from "lucide-react";
 
 interface Post {
@@ -27,31 +28,39 @@ interface Post {
   comments: number;
   timestamp: string;
   image?: string;
+  type: 'standard' | 'showcase' | 'course';
+  price?: string; 
 }
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('feed');
+  const [isPostSheetOpen, setIsPostSheetOpen] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
+  const [swallows, setSwallows] = useState(1240);
+  const [postType, setPostType] = useState<'standard' | 'showcase' | 'course'>('standard');
 
   const mockPosts: Post[] = useMemo(() => [
     {
       id: 1,
       user: "Alex Rivera",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-      content: "Exploring the deep blue vibes of SwaBoard tonight. The interface is so satisfying. ✨",
+      content: "Exploring the deep blue vibes of SwaBoard tonight. Launching my first board! 🚀",
       likes: 128,
       comments: 24,
       timestamp: "2h ago",
-      image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&q=80"
+      image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&q=80",
+      type: 'standard'
     },
     {
       id: 2,
       user: "Sarah Chen",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-      content: "Just dropped a new track. The frequency is 432Hz. Who's listening? 🎧",
+      content: "Mastering the Flow: A complete guide to digital minimalism and SwaBoard strategy.",
       likes: 856,
       comments: 142,
-      timestamp: "5h ago"
+      timestamp: "5h ago",
+      type: 'course',
+      price: '45 Swallows'
     },
     {
       id: 3,
@@ -61,21 +70,22 @@ export default function App() {
       likes: 45,
       comments: 3,
       timestamp: "12m ago",
-      image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80"
+      image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80",
+      type: 'showcase'
     }
   ], []);
 
   const mockActivities = [
     { id: 1, type: 'like', user: 'Marcus', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus', time: '5m ago' },
     { id: 2, type: 'comment', user: 'Elena', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elena', time: '12m ago', text: 'Stunning visuals!' },
-    { id: 3, type: 'follow', user: 'Orbital', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Orbital', time: '1h ago' },
+    { id: 3, type: 'boost', user: 'Orbital', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Orbital', time: '1h ago' },
   ];
 
   const searchTrends = [
+    { tag: '#Strategy', posts: '15.2k' },
     { tag: '#Ethereal', posts: '12.4k' },
-    { tag: '#BlueDimension', posts: '8.2k' },
+    { tag: '#BlueSwallows', posts: '9.8k' },
     { tag: '#FlowState', posts: '5.1k' },
-    { tag: '#DigitalZen', posts: '3.9k' },
   ];
 
   const toggleLike = (id: number) => {
@@ -83,6 +93,12 @@ export default function App() {
     if (newLiked.has(id)) newLiked.delete(id);
     else newLiked.add(id);
     setLikedPosts(newLiked);
+  };
+
+  const handleBoost = () => {
+    if (swallows >= 50) {
+      setSwallows(prev => prev - 50);
+    }
   };
 
   return (
@@ -95,22 +111,23 @@ export default function App() {
       <div className="relative h-full w-full max-w-md mx-auto flex flex-col bg-black/40 backdrop-blur-3xl border-x border-white/5 shadow-2xl">
         
         {/* Header */}
-        <header className="px-6 pt-12 pb-4 flex justify-between items-center z-20">
+        <header className="px-6 pt-6 pb-4 flex justify-between items-center z-20">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col"
           >
-            <span className="text-[10px] text-blue-400/60 uppercase tracking-[0.4em] font-medium leading-none mb-1">
-              Social Interface
-            </span>
             <h1 className="text-2xl font-light tracking-tighter text-blue-100">
               Swa<span className="font-semibold text-blue-500">Board</span>
             </h1>
           </motion.div>
-          <div className="flex gap-4">
-             <motion.div whileTap={{ scale: 0.9 }} className="w-10 h-10 rounded-full border border-white/10 bg-blue-500/10 flex items-center justify-center cursor-pointer">
-                <Flame size={18} className="text-blue-400" />
+          <div className="flex gap-3">
+             <motion.div 
+              whileTap={{ scale: 0.9 }} 
+              className="px-3 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 flex items-center gap-2 cursor-pointer group"
+             >
+                <SendHorizontal size={14} className="text-blue-400 -rotate-45 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                <span className="text-xs font-medium text-blue-100">{swallows}</span>
              </motion.div>
           </div>
         </header>
@@ -140,7 +157,11 @@ export default function App() {
                           <img src={post.avatar} alt="" className="w-full h-full rounded-full" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-blue-100 uppercase tracking-wide">{post.user}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-blue-100 uppercase tracking-wide">{post.user}</span>
+                            {post.type === 'course' && <span className="text-[8px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded-full border border-indigo-500/30 uppercase tracking-[0.1em]">Course</span>}
+                            {post.type === 'showcase' && <span className="text-[8px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full border border-blue-500/30 uppercase tracking-[0.1em]">Showcase</span>}
+                          </div>
                           <span className="text-[10px] text-blue-400/40">{post.timestamp}</span>
                         </div>
                       </div>
@@ -151,6 +172,11 @@ export default function App() {
 
                     <div className="px-5 pb-2 text-sm leading-relaxed text-blue-100/80 font-light">
                       {post.content}
+                      {post.type === 'course' && post.price && (
+                        <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-100 text-xs font-normal">
+                          <Globe size={12} className="text-blue-400" /> Unlock for {post.price}
+                        </div>
+                      )}
                     </div>
 
                     {post.image && (
@@ -171,8 +197,12 @@ export default function App() {
                         <MessageCircle size={18} strokeWidth={1.5} />
                         <span className="text-xs font-medium">{post.comments}</span>
                       </button>
-                      <button className="ml-auto text-blue-400/40 hover:text-blue-400/60 transition-colors">
-                        <Share2 size={18} strokeWidth={1.5} />
+                      <button 
+                        onClick={handleBoost}
+                        className="ml-auto text-blue-400/40 hover:text-blue-400 flex items-center gap-1.5 py-1 px-3 bg-white/5 border border-white/5 rounded-full transition-all hover:bg-blue-500/10"
+                      >
+                        <SendHorizontal size={14} className="-rotate-45" />
+                        <span className="text-[10px] uppercase tracking-widest font-medium">Boost</span>
                       </button>
                     </div>
                   </motion.div>
@@ -226,40 +256,6 @@ export default function App() {
               </motion.div>
             )}
 
-            {activeTab === 'post' && (
-              <motion.div 
-                key="post"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="h-full pt-8 flex flex-col"
-              >
-                <div className="text-center mb-8">
-                  <h2 className="text-xl font-light tracking-tight">Create Board</h2>
-                  <p className="text-xs text-blue-400/40 mt-1 italic">Spread your essence across the network</p>
-                </div>
-                
-                <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 space-y-4">
-                  <textarea 
-                    placeholder="Capture your frequency..." 
-                    className="w-full h-40 bg-transparent text-lg font-light outline-none resize-none placeholder:text-blue-400/20"
-                  />
-                  
-                  <div className="flex gap-4 pt-4">
-                    <button className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400/60 hover:text-blue-400 transition-colors">
-                      <PlusSquare size={20} />
-                    </button>
-                    <button className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400/60 hover:text-blue-400 transition-colors">
-                      <Globe size={20} />
-                    </button>
-                    <button className="flex-1 rounded-2xl bg-blue-600/20 border border-blue-500/40 text-blue-100 text-sm font-medium tracking-widest uppercase hover:bg-blue-600/30 transition-all">
-                      Post Board
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
             {activeTab === 'activity' && (
               <motion.div 
                 key="activity"
@@ -285,6 +281,7 @@ export default function App() {
                         {activity.type === 'like' && 'pulsed your board'}
                         {activity.type === 'comment' && 'shared a thought'}
                         {activity.type === 'follow' && 'is now synchronized'}
+                        {activity.type === 'boost' && 'sent swallows to boost you'}
                       </span>
                       {activity.text && <p className="text-xs text-blue-400/60 mt-1 italic">"{activity.text}"</p>}
                       <span className="text-[10px] text-blue-400/20 mt-1 uppercase tracking-tighter">{activity.time}</span>
@@ -309,8 +306,8 @@ export default function App() {
                       <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Me" alt="" className="w-full h-full rounded-full" />
                     </div>
                   </div>
-                  <h2 className="text-2xl font-light tracking-tight">User Prototype</h2>
-                  <p className="text-blue-400/60 text-xs italic mt-1 font-light tracking-wider">Digital Entity #84920</p>
+                  <h2 className="text-2xl font-light tracking-tight">SwaPrototype</h2>
+                  <p className="text-blue-400/60 text-xs italic mt-1 font-light tracking-wider">Level 12 Strategy Entity</p>
                   
                   <div className="flex gap-8 mt-8">
                     <div className="flex flex-col">
@@ -318,14 +315,18 @@ export default function App() {
                       <span className="text-[10px] text-blue-400/40 uppercase tracking-widest">Followers</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-lg font-semibold text-blue-100">842</span>
-                      <span className="text-[10px] text-blue-400/40 uppercase tracking-widest">Following</span>
+                      <span className="text-lg font-semibold text-blue-100">{swallows}</span>
+                      <span className="text-[10px] text-blue-400/40 uppercase tracking-widest">Swallows</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-lg font-semibold text-blue-100">128</span>
                       <span className="text-[10px] text-blue-400/40 uppercase tracking-widest">Boards</span>
                     </div>
                   </div>
+                  
+                  <button className="mt-8 px-8 py-2.5 rounded-full bg-white/5 border border-white/10 text-xs uppercase tracking-widest font-medium hover:bg-white/10 transition-all">
+                    Creator Dashboard
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-3 gap-1 pt-4">
@@ -350,7 +351,13 @@ export default function App() {
             <motion.button
               key={item.id}
               whileTap={{ scale: 0.9 }}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                if (item.id === 'post') {
+                  setIsPostSheetOpen(true);
+                } else {
+                  setActiveTab(item.id);
+                }
+              }}
               className={`relative p-3 rounded-full transition-all duration-500 ${
                 activeTab === item.id 
                 ? 'text-blue-400 bg-blue-500/10' 
@@ -371,6 +378,106 @@ export default function App() {
 
         {/* Home Indicator */}
         <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-16 h-1 bg-white/10 rounded-full" />
+
+        {/* Bottom Sheet for Posting */}
+        <AnimatePresence>
+          {isPostSheetOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsPostSheetOpen(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+              />
+              
+              {/* Sheet */}
+              <motion.div 
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="absolute bottom-0 left-0 right-0 h-[75vh] bg-[#020617] border-t border-white/10 rounded-t-[40px] z-[70] flex flex-col overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+              >
+                {/* Drag Handle & Close */}
+                <div className="flex flex-col items-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
+                  <div className="w-12 h-1.5 bg-white/10 rounded-full mb-4" />
+                  <div className="w-full px-6 flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-light tracking-tight">Create Board</h2>
+                    <button 
+                      onClick={() => setIsPostSheetOpen(false)}
+                      className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-blue-400/40 hover:text-blue-400 transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 pb-12 no-scrollbar">
+                  {/* Template Selection */}
+                  <div className="flex gap-2 mb-8">
+                    {['standard', 'showcase', 'course'].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setPostType(type as any)}
+                        className={`flex-1 py-3 rounded-2xl text-[10px] uppercase tracking-widest border transition-all ${
+                          postType === type 
+                          ? 'bg-blue-500/10 border-blue-500/40 text-blue-100' 
+                          : 'bg-white/5 border-white/5 text-blue-400/40'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 space-y-6">
+                    <textarea 
+                      placeholder={
+                        postType === 'course' ? "What will your students learn? Describe your frequency..." :
+                        postType === 'showcase' ? "Display your light. What are you promoting?" :
+                        "Capture your frequency..."
+                      }
+                      className="w-full h-40 bg-transparent text-lg font-light outline-none resize-none placeholder:text-blue-400/20"
+                    />
+                    
+                    {postType === 'course' && (
+                      <div className="pt-4 border-t border-white/5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-blue-400/60 lowercase italic">Course Access Price</span>
+                          <div className="flex items-center gap-2 bg-blue-500/5 px-3 py-1 rounded-full border border-blue-500/20">
+                            <SendHorizontal size={12} className="-rotate-45 text-blue-400" />
+                            <input type="number" defaultValue={20} className="w-12 bg-transparent text-xs text-blue-100 outline-none" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex gap-4 pt-2">
+                      <button className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400/60 hover:text-blue-400 transition-colors">
+                        <PlusSquare size={24} />
+                      </button>
+                      <button className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400/60 hover:text-blue-400 transition-colors">
+                        <Globe size={24} />
+                      </button>
+                      <button 
+                        onClick={() => setIsPostSheetOpen(false)}
+                        className="flex-1 rounded-2xl bg-blue-600/20 border border-blue-500/40 text-blue-100 text-sm font-medium tracking-widest uppercase hover:bg-blue-600/30 transition-all"
+                      >
+                        Launch Board
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="mt-8 text-center text-[10px] text-blue-400/20 uppercase tracking-[0.3em]">
+                    Visibility: Global Dimension
+                  </p>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
 
       <style>{`
