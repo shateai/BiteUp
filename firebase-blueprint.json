@@ -30,6 +30,18 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "recipeId"]
+    },
+    "pantryItem": {
+      "title": "Pantry Item",
+      "description": "An ingredient in a user's pantry",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "image": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "image"]
     }
   },
   "firestore": {
@@ -40,6 +52,10 @@
     "/users/{userId}/likes/{recipeId}": {
       "schema": "userLike",
       "description": "Recipes liked by a specific user"
+    },
+    "/users/{userId}/pantry/{itemId}": {
+      "schema": "pantryItem",
+      "description": "User's pantry items"
     }
   }
 }

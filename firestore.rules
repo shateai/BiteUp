@@ -44,5 +44,14 @@ service cloud.firestore {
                       exists(/databases/$(database)/documents/recipes/$(recipeId));
       allow delete: if isOwner(userId);
     }
+
+    // 3. User Pantry (Private to User)
+    match /users/{userId}/pantry/{itemId} {
+      allow read, list: if isOwner(userId);
+      allow create: if isOwner(userId) && 
+                      incoming().name is string && incoming().name.size() <= 100 &&
+                      incoming().image is string; // Allow base64 images
+      allow delete: if isOwner(userId);
+    }
   }
 }
