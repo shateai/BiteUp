@@ -3,239 +3,380 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { motion, useSpring } from "motion/react";
-import React, { useEffect, useState, useMemo } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import React, { useState, useMemo } from "react";
+import { 
+  Home, 
+  Search, 
+  PlusSquare, 
+  Heart, 
+  User, 
+  MessageCircle, 
+  Share2, 
+  MoreHorizontal,
+  Flame,
+  Globe
+} from "lucide-react";
+
+interface Post {
+  id: number;
+  user: string;
+  avatar: string;
+  content: string;
+  likes: number;
+  comments: number;
+  timestamp: string;
+  image?: string;
+}
 
 export default function App() {
-  const [score, setScore] = useState(0);
-  const [gameActive, setGameActive] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const [isPressed, setIsPressed] = useState(false);
-  const [lastTap, setLastTap] = useState(0);
-  
-  // World coordinates (where the player is in the "world")
-  const [worldX, setWorldX] = useState(0);
-  const [worldY, setWorldY] = useState(0);
+  const [activeTab, setActiveTab] = useState('feed');
+  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
 
-  // Smooth springs for satisfying background movement
-  const springConfig = { damping: 30, stiffness: 150 };
-  const viewX = useSpring(0, springConfig);
-  const viewY = useSpring(0, springConfig);
-
-  // Update animated view coordinates when world position changes
-  useEffect(() => {
-    viewX.set(-worldX);
-    viewY.set(-worldY);
-  }, [worldX, worldY, viewX, viewY]);
-
-  // Generate a static field of nodes once
-  const staticNodes = useMemo(() => {
-    return [...Array(60)].map((_, i) => ({
-      id: i,
-      x: (Math.random() - 0.5) * 2000, // Wide spread
-      y: (Math.random() - 0.5) * 2000,
-      type: Math.random() > 0.8 ? 'blue' : 'red' as 'blue' | 'red',
-      size: Math.random() * 8 + 4
-    }));
-  }, []);
-
-  const handleDoubleTap = () => {
-    const now = Date.now();
-    if (now - lastTap < 300) {
-      setShowMenu(true);
+  const mockPosts: Post[] = useMemo(() => [
+    {
+      id: 1,
+      user: "Alex Rivera",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
+      content: "Exploring the deep blue vibes of SwaBoard tonight. The interface is so satisfying. ✨",
+      likes: 128,
+      comments: 24,
+      timestamp: "2h ago",
+      image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&q=80"
+    },
+    {
+      id: 2,
+      user: "Sarah Chen",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
+      content: "Just dropped a new track. The frequency is 432Hz. Who's listening? 🎧",
+      likes: 856,
+      comments: 142,
+      timestamp: "5h ago"
+    },
+    {
+      id: 3,
+      user: "Liquid Digital",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Liquid",
+      content: "Synchronizing systems. Pure flow state achieved. #SwaBoard #Vibe",
+      likes: 45,
+      comments: 3,
+      timestamp: "12m ago",
+      image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80"
     }
-    setLastTap(now);
+  ], []);
+
+  const mockActivities = [
+    { id: 1, type: 'like', user: 'Marcus', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus', time: '5m ago' },
+    { id: 2, type: 'comment', user: 'Elena', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elena', time: '12m ago', text: 'Stunning visuals!' },
+    { id: 3, type: 'follow', user: 'Orbital', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Orbital', time: '1h ago' },
+  ];
+
+  const searchTrends = [
+    { tag: '#Ethereal', posts: '12.4k' },
+    { tag: '#BlueDimension', posts: '8.2k' },
+    { tag: '#FlowState', posts: '5.1k' },
+    { tag: '#DigitalZen', posts: '3.9k' },
+  ];
+
+  const toggleLike = (id: number) => {
+    const newLiked = new Set(likedPosts);
+    if (newLiked.has(id)) newLiked.delete(id);
+    else newLiked.add(id);
+    setLikedPosts(newLiked);
   };
-
-  const MOVE_STEP = 120;
-
-  const handleSwipe = (dir: 'left' | 'right' | 'up' | 'down') => {
-    if (dir === 'left') setWorldX(prev => prev - MOVE_STEP);
-    if (dir === 'right') setWorldX(prev => prev + MOVE_STEP);
-    if (dir === 'up') setWorldY(prev => prev - MOVE_STEP);
-    if (dir === 'down') setWorldY(prev => prev + MOVE_STEP);
-  };
-
-  // Touch/Mouse tracking for 4-way swipes
-  const [touchStart, setTouchStart] = useState<{ x: number, y: number } | null>(null);
-
-  const onStart = (clientX: number, clientY: number) => {
-    handleDoubleTap();
-    setTouchStart({ x: clientX, y: clientY });
-    setIsPressed(true);
-  };
-
-  const onEnd = (clientX: number, clientY: number) => {
-    if (touchStart !== null) {
-      const diffX = clientX - touchStart.x;
-      const diffY = clientY - touchStart.y;
-      const threshold = 30;
-
-      if (Math.abs(diffX) > Math.abs(diffY)) {
-        if (diffX > threshold) handleSwipe('right');
-        else if (diffX < -threshold) handleSwipe('left');
-      } else {
-        if (diffY > threshold) handleSwipe('down');
-        else if (diffY < -threshold) handleSwipe('up');
-      }
-    }
-    setTouchStart(null);
-    setIsPressed(false);
-  };
-
-  // Collision/Interaction logic (Check periodically or on movement)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      // Find nodes close to 0,0 (player center)
-      staticNodes.forEach(node => {
-        const dist = Math.sqrt(Math.pow(node.x - worldX, 2) + Math.pow(node.y - worldY, 2));
-        if (dist < 40 && node.type === 'blue') {
-          // In a real game we'd remove it, here we just count "encounters"
-          // for a satisfying "satisfying" feel, let's keep it simple
-        }
-      });
-    }, 100);
-    return () => clearInterval(timer);
-  }, [worldX, worldY, staticNodes]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#020617] select-none touch-none flex items-center justify-center font-sans">
-      {/* Deep Stars/Parallax Background */}
-      <motion.div 
-        style={{ x: viewX.get() * 0.2, y: viewY.get() * 0.2 }}
-        className="absolute inset-0 opacity-10 pointer-events-none"
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#1e3a8a_0%,_transparent_70%)] scale-150" />
-      </motion.div>
+    <div className="relative h-screen w-full overflow-hidden bg-[#020617] text-blue-50 font-sans selection:bg-blue-500/30">
+      {/* Background Decor */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none" />
 
-      {/* Main Container */}
-      <motion.div 
-        className="relative w-full max-w-[375px] h-full max-h-[720px] mx-4 bg-black/60 border border-blue-500/20 rounded-[50px] shadow-2xl backdrop-blur-xl overflow-hidden flex flex-col items-center"
-        onTouchStart={(e) => onStart(e.touches[0].clientX, e.touches[0].clientY)}
-        onTouchEnd={(e) => onEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY)}
-        onMouseDown={(e) => onStart(e.clientX, e.clientY)}
-        onMouseUp={(e) => onEnd(e.clientX, e.clientY)}
-      >
-        {/* HUD */}
-        <div className="absolute top-12 left-0 right-0 px-10 flex justify-between items-center z-30">
-          <div className="flex flex-col">
-            <span className="text-blue-400/60 uppercase tracking-[0.4em] text-[10px] font-medium">Coordinate</span>
-            <span className="text-lg font-light text-blue-50/80">{Math.round(worldX)}, {Math.round(worldY)}</span>
-          </div>
-          <motion.div className="w-10 h-10 border border-blue-500/20 rounded-full flex items-center justify-center">
-             <div className="w-1 h-1 bg-blue-400 rounded-full shadow-[0_0_5px_white]" />
-          </motion.div>
-        </div>
-
-        {/* Exploration Area */}
-        <div className="relative flex-1 w-full overflow-hidden flex items-center justify-center">
-          {/* World Coordinates Moving Layer */}
+      {/* Main Content Area */}
+      <div className="relative h-full w-full max-w-md mx-auto flex flex-col bg-black/40 backdrop-blur-3xl border-x border-white/5 shadow-2xl">
+        
+        {/* Header */}
+        <header className="px-6 pt-12 pb-4 flex justify-between items-center z-20">
           <motion.div 
-            style={{ x: viewX, y: viewY }}
-            className="absolute"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col"
           >
-            {staticNodes.map(node => (
-              <div
-                key={node.id}
-                className={`absolute rounded-full blur-[1px] transition-opacity duration-1000 ${
-                  node.type === 'red' ? 'bg-red-500/80 shadow-[0_0_15px_#ef4444]' : 'bg-blue-300 shadow-[0_0_20px_#3b82f6]'
-                }`}
-                style={{
-                  left: node.x,
-                  top: node.y,
-                  width: node.size,
-                  height: node.size,
-                  transform: 'translate(-50%, -50%)'
-                }}
-              />
-            ))}
+            <span className="text-[10px] text-blue-400/60 uppercase tracking-[0.4em] font-medium leading-none mb-1">
+              Social Interface
+            </span>
+            <h1 className="text-2xl font-light tracking-tighter text-blue-100">
+              Swa<span className="font-semibold text-blue-500">Board</span>
+            </h1>
           </motion.div>
+          <div className="flex gap-4">
+             <motion.div whileTap={{ scale: 0.9 }} className="w-10 h-10 rounded-full border border-white/10 bg-blue-500/10 flex items-center justify-center cursor-pointer">
+                <Flame size={18} className="text-blue-400" />
+             </motion.div>
+          </div>
+        </header>
 
-          {/* Player Light (Centered) */}
-          <div className="relative z-20">
-            <div className="relative w-16 h-16 flex items-center justify-center">
-              <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[20px]" />
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto no-scrollbar pb-24 px-4">
+          <AnimatePresence mode="wait">
+            {activeTab === 'feed' && (
               <motion.div 
-                animate={{ 
-                  scale: isPressed ? 1.1 : [1, 1.05, 1],
-                  rotate: isPressed ? [0, 10, -10, 0] : 0
-                }}
-                transition={{ repeat: Infinity, duration: 3 }}
-                className="w-12 h-12 bg-blue-400 rounded-full border-2 border-white/40 shadow-[0_0_40px_rgba(59,130,246,0.6)] flex items-center justify-center overflow-hidden"
+                key="feed"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-6 pt-2"
               >
-                <div className="w-full h-full bg-gradient-to-br from-blue-300 via-blue-600 to-blue-900 opacity-95" />
+                {mockPosts.map((post, i) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-white/5 border border-white/10 rounded-[32px] overflow-hidden backdrop-blur-xl group"
+                  >
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-500/20 border border-white/10 p-0.5">
+                          <img src={post.avatar} alt="" className="w-full h-full rounded-full" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-blue-100 uppercase tracking-wide">{post.user}</span>
+                          <span className="text-[10px] text-blue-400/40">{post.timestamp}</span>
+                        </div>
+                      </div>
+                      <button className="text-blue-400/40 hover:text-blue-400 transition-colors">
+                        <MoreHorizontal size={20} />
+                      </button>
+                    </div>
+
+                    <div className="px-5 pb-2 text-sm leading-relaxed text-blue-100/80 font-light">
+                      {post.content}
+                    </div>
+
+                    {post.image && (
+                      <div className="mx-4 mb-4 rounded-2xl overflow-hidden aspect-[16/10] bg-blue-900/20 border border-white/5">
+                        <img src={post.image} alt="" className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" />
+                      </div>
+                    )}
+
+                    <div className="px-5 pb-5 flex items-center gap-6">
+                      <button 
+                        onClick={() => toggleLike(post.id)}
+                        className={`flex items-center gap-1.5 transition-all ${likedPosts.has(post.id) ? 'text-blue-500' : 'text-blue-400/40 hover:text-blue-400/60'}`}
+                      >
+                        <Heart size={18} fill={likedPosts.has(post.id) ? "currentColor" : "none"} strokeWidth={1.5} />
+                        <span className="text-xs font-medium">{post.likes + (likedPosts.has(post.id) ? 1 : 0)}</span>
+                      </button>
+                      <button className="flex items-center gap-1.5 text-blue-400/40 hover:text-blue-400/60 transition-colors">
+                        <MessageCircle size={18} strokeWidth={1.5} />
+                        <span className="text-xs font-medium">{post.comments}</span>
+                      </button>
+                      <button className="ml-auto text-blue-400/40 hover:text-blue-400/60 transition-colors">
+                        <Share2 size={18} strokeWidth={1.5} />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
               </motion.div>
-              {/* Rotating outer rings */}
-              <div className="absolute inset-[-6px] border border-blue-400/10 rounded-full animate-[spin_10s_linear_infinite]" />
-              <div className="absolute inset-[-12px] border border-blue-500/5 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
-            </div>
-          </div>
-        </div>
+            )}
 
-        {/* Start/Instruction Overlay */}
-        {!gameActive && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-md z-40 flex flex-col items-center justify-center text-center px-10">
-            <h2 className="text-3xl font-extralight text-blue-50 mb-4 tracking-tight">Ethereal Explorer</h2>
-            <p className="text-blue-200/60 text-sm italic mb-10 leading-relaxed font-light">"Pohybuj se švihem v prázdnotě. Dvojitý klik pro vstup do jádra."</p>
+            {activeTab === 'explore' && (
+              <motion.div 
+                key="explore"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-6 pt-4"
+              >
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400/40 group-focus-within:text-blue-400 transition-colors" size={18} />
+                  <input 
+                    type="text" 
+                    placeholder="Search Dimensions..." 
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-sm outline-none focus:border-blue-500/50 transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {searchTrends.map((trend, i) => (
+                    <motion.div 
+                      key={trend.tag}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="p-4 rounded-2xl bg-gradient-to-br from-blue-600/10 to-blue-900/20 border border-white/5 hover:border-blue-500/30 transition-all cursor-pointer"
+                    >
+                      <div className="text-blue-400/60 text-[10px] uppercase tracking-widest mb-1">Trending</div>
+                      <div className="text-blue-100 font-medium text-sm">{trend.tag}</div>
+                      <div className="text-blue-400/40 text-[10px] mt-2">{trend.posts} boardings</div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="pt-2">
+                  <h3 className="text-[10px] text-blue-400/60 uppercase tracking-[0.4em] font-medium mb-4">Recommended Boards</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[1, 2, 3, 4, 5, 6].map((idx) => (
+                      <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-blue-900/20 border border-white/5">
+                        <img src={`https://images.unsplash.com/photo-${1600000000000 + idx}?w=300&q=80`} alt="" className="w-full h-full object-cover opacity-60" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'post' && (
+              <motion.div 
+                key="post"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="h-full pt-8 flex flex-col"
+              >
+                <div className="text-center mb-8">
+                  <h2 className="text-xl font-light tracking-tight">Create Board</h2>
+                  <p className="text-xs text-blue-400/40 mt-1 italic">Spread your essence across the network</p>
+                </div>
+                
+                <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 space-y-4">
+                  <textarea 
+                    placeholder="Capture your frequency..." 
+                    className="w-full h-40 bg-transparent text-lg font-light outline-none resize-none placeholder:text-blue-400/20"
+                  />
+                  
+                  <div className="flex gap-4 pt-4">
+                    <button className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400/60 hover:text-blue-400 transition-colors">
+                      <PlusSquare size={20} />
+                    </button>
+                    <button className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400/60 hover:text-blue-400 transition-colors">
+                      <Globe size={20} />
+                    </button>
+                    <button className="flex-1 rounded-2xl bg-blue-600/20 border border-blue-500/40 text-blue-100 text-sm font-medium tracking-widest uppercase hover:bg-blue-600/30 transition-all">
+                      Post Board
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'activity' && (
+              <motion.div 
+                key="activity"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-4 pt-4"
+              >
+                {mockActivities.map((activity, i) => (
+                  <motion.div 
+                    key={activity.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex items-center gap-4 p-4 rounded-[24px] bg-white/5 border border-white/10"
+                  >
+                    <div className="w-12 h-12 rounded-full p-0.5 border border-blue-500/20">
+                      <img src={activity.avatar} alt="" className="w-full h-full rounded-full" />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                      <span className="text-sm font-light">
+                        <span className="font-semibold text-blue-400 uppercase tracking-wide mr-1">{activity.user}</span>
+                        {activity.type === 'like' && 'pulsed your board'}
+                        {activity.type === 'comment' && 'shared a thought'}
+                        {activity.type === 'follow' && 'is now synchronized'}
+                      </span>
+                      {activity.text && <p className="text-xs text-blue-400/60 mt-1 italic">"{activity.text}"</p>}
+                      <span className="text-[10px] text-blue-400/20 mt-1 uppercase tracking-tighter">{activity.time}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+
+            {activeTab === 'profile' && (
+              <motion.div 
+                key="profile"
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                className="pt-8 space-y-8"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative group mb-4">
+                    <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-[20px] group-hover:blur-[30px] transition-all" />
+                    <div className="relative w-24 h-24 rounded-full p-1 border-2 border-blue-500/40 bg-black backdrop-blur-md">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Me" alt="" className="w-full h-full rounded-full" />
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-light tracking-tight">User Prototype</h2>
+                  <p className="text-blue-400/60 text-xs italic mt-1 font-light tracking-wider">Digital Entity #84920</p>
+                  
+                  <div className="flex gap-8 mt-8">
+                    <div className="flex flex-col">
+                      <span className="text-lg font-semibold text-blue-100">2.4k</span>
+                      <span className="text-[10px] text-blue-400/40 uppercase tracking-widest">Followers</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-lg font-semibold text-blue-100">842</span>
+                      <span className="text-[10px] text-blue-400/40 uppercase tracking-widest">Following</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-lg font-semibold text-blue-100">128</span>
+                      <span className="text-[10px] text-blue-400/40 uppercase tracking-widest">Boards</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1 pt-4">
+                  {[...Array(9)].map((_, idx) => (
+                    <div key={idx} className="aspect-square bg-blue-900/10 border border-white/5 hover:bg-blue-500/20 transition-colors cursor-pointer" />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+
+        {/* Bottom Navigation */}
+        <nav className="absolute bottom-6 left-6 right-6 h-16 bg-white/5 border border-white/10 rounded-full backdrop-blur-2xl flex items-center justify-around px-2 z-50">
+          {[
+            { id: 'feed', icon: Home },
+            { id: 'explore', icon: Search },
+            { id: 'post', icon: PlusSquare },
+            { id: 'activity', icon: Heart },
+            { id: 'profile', icon: User }
+          ].map((item) => (
             <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setGameActive(true)}
-              className="px-12 py-4 bg-blue-600/20 border border-blue-400/40 rounded-full text-blue-100 text-sm tracking-[0.2em] uppercase"
+              key={item.id}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setActiveTab(item.id)}
+              className={`relative p-3 rounded-full transition-all duration-500 ${
+                activeTab === item.id 
+                ? 'text-blue-400 bg-blue-500/10' 
+                : 'text-blue-400/40 hover:text-blue-400/60'
+              }`}
             >
-              Vstoupit
+              <item.icon size={22} strokeWidth={activeTab === item.id ? 2 : 1.5} />
+              {activeTab === item.id && (
+                <motion.div 
+                  layoutId="activeTab"
+                  className="absolute inset-0 border border-blue-500/20 rounded-full"
+                  transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+                />
+              )}
             </motion.button>
-          </div>
-        )}
-
-        {/* Modern Menu Overlay */}
-        {showMenu && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-black/80 backdrop-blur-2xl z-50 flex flex-col items-center justify-center px-6"
-          >
-            <div className="text-blue-400/60 uppercase tracking-[0.4em] text-[10px] font-medium mb-12">
-              System Core
-            </div>
-            
-            <div className="grid grid-cols-1 gap-4 w-full">
-              {[
-                { title: 'Resume', desc: 'Return to existence' },
-                { title: 'Navigation', desc: 'Calibration complete' },
-                { title: 'Dimension', desc: 'Shift reality' }
-              ].map((card, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                  onClick={() => i === 0 && setShowMenu(false)}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-white/5 border border-white/10 rounded-3xl p-6 flex items-center justify-between group hover:bg-white/10 transition-colors cursor-pointer"
-                >
-                  <div className="flex flex-col">
-                    <span className="text-lg font-light text-blue-50">{card.title}</span>
-                    <span className="text-xs text-blue-400/40">{card.desc}</span>
-                  </div>
-                  <div className="w-10 h-10 rounded-full border border-white/5 bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full shadow-[0_0_10px_#3b82f6]" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            <motion.button 
-              onClick={() => setShowMenu(false)}
-              className="mt-12 text-blue-400/40 uppercase tracking-[0.3em] text-[10px] border-b border-transparent hover:border-blue-400/20 transition-all"
-            >
-              Deactivate Menu
-            </motion.button>
-          </motion.div>
-        )}
+          ))}
+        </nav>
 
         {/* Home Indicator */}
-        <div className="absolute bottom-4 w-24 h-1 bg-white/10 rounded-full"></div>
-      </motion.div>
+        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-16 h-1 bg-white/10 rounded-full" />
+      </div>
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 }
