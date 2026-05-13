@@ -385,10 +385,13 @@ export default function App() {
           const r = data[i], g = data[i+1], b = data[i+2];
           
           // Enhanced Chroma Key for Neon Green
-          // We check if Green is significantly dominant over Red and Blue
-          const isGreen = (g > 130 && g > r * 1.25 && g > b * 1.25);
+          // We look for pixels where Green is dominant and significantly brighter than R and B
+          const isGreen = (g > 100 && g > r * 1.4 && g > b * 1.4);
           
-          if (isGreen) {
+          // Also handle very bright neon variants and slight shadows
+          const isHighGreen = (g > 180 && g > r * 1.2 && g > b * 1.2);
+          
+          if (isGreen || isHighGreen) {
             data[i+3] = 0;
           }
         }
@@ -405,7 +408,7 @@ export default function App() {
     setGeneratingIngredient(name);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const prompt = `A professional, ultra-realistic 3D render of a single ${name}, centered, 1:1 aspect ratio. The object MUST be isolated on a FLAT, SOLID, VIBRANT NEON-GREEN (hex #00FF00) background. NO shadows on the background, NO other objects, pure isolation.`;
+      const prompt = `A professional food studio photograph of a single ${name}, perfectly centered, 1:1 aspect ratio. The object is isolated on a FLAT, BRIGHT NEON-GREEN (hex #00FF00) background. NO shadows, NO gradients, NO table, just the pure material on neon green for chroma keying.`;
       
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
@@ -422,9 +425,24 @@ export default function App() {
 
       if (base64) {
         const processedBase64 = await processImage(base64);
+        
+        // Upload to Cloudinary via server-side Proxy to keep secrets safe
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: processedBase64, name: name.toLowerCase() })
+        });
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json();
+          throw new Error(errorData.error || 'Cloudinary upload failed');
+        }
+        
+        const { url } = await uploadRes.json();
+
         await addDoc(collection(db, "users", user.uid, "pantry"), {
           name,
-          image: processedBase64,
+          image: url,
           userId: user.uid,
           createdAt: serverTimestamp()
         });
