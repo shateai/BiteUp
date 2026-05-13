@@ -1,32 +1,28 @@
-# SwaBoard - Project Plan
+# Savory - Project Plan
 
-## 🌌 Vize
-SwaBoard je multifunkční sociální síť a tržiště (Swallow + Board). Je to prostor pro sebeprezentaci, reklamu a vzdělávání, postavený na strategii a unikátní ekonomice vlaštovek.
+## 🍲 Vision
+Savory is a high-end, modern cooking application designed for enthusiasts who appreciate editorial aesthetics and high-quality culinary content. It transitions from a social tool to a dedicated recipe and cookbook platform.
 
-## 💸 Ekonomika a Strategie
-- **Měna:** Modré papírové vlaštovky (Blue Paper Swallows).
-- **Boost:** Vlaštovky se používají k "vyslání" příspěvku do světa (zvýšení virality/dosahu). 
-- **Získávání:** Vlaštovky lze vydělat aktivitou, prodejem obsahu nebo nákupem.
-- **Strategie:** Uživatel musí taktizovat, jak vlaštovky investovat do svých "Boardů" pro maximální návratnost.
+## 🎨 Design Language
+- **Vibe:** Editorial, minimal, sophisticated.
+- **Typography:** Playfair Display (Serif) for headings, Inter (Sans) for UI.
+- **Colors:** Beige (#fafaf9), Stone (#1c1917), Amber/Honey (#fbbf24) for accents.
+- **Interactions:** Smooth spring animations, glassmorphism overlays, and deep scrollable layouts.
 
-## 📑 Typy Boardů (Příspěvků)
-Aplikace nabízí různé šablony pro posty:
-- **Standard:** Klasické sdílení myšlenek/obrázků.
-- **Showcase (Reklama):** Post určený pro sebeprezentaci nebo propagaci služby.
-- **Kurz (Course):** Vzdělávací obsah, který lze zamknout za poplatek (vlaštovky nebo peníze).
-- **Prodejní Board:** Přímočará nabídka produktu.
+## 🛠 Features
+- [x] **Home Feed:** Curated recipes with a "Recipe of the Day" hero.
+- [x] **Categories:** Easy filtering by cuisine or type.
+- [x] **Recipe Detail:** Immersive view with stats, ingredients list, and step-by-step instructions.
+- [x] **Favorites:** Save recipes to your personal collection.
+- [ ] **Cookbooks:** Organize recipes into digital books.
+- [ ] **Shopping List:** Automatically generate a list from ingredients.
+- [ ] **Timer:** Integrated kitchen timers for steps.
 
-## 🎨 Designový jazyk
-- **Mood:** Moderní, tmavě modrý, "techno-zen".
-- **Symbol:** Modrá papírová vlaštovka (paper swallow) jako hlavní ikona a vizuální motiv.
-- **Styl:** Glassmorphism, plynulé motion transitions, neonové modré akcenty.
-
-## 🛠 Aktuální roadmapa
-- [x] **Založení UI:** Feed, Explore, Profile, Activity.
-- [ ] **Swallow Wallet:** Implementace peněženky s vlaštovkami v záhlaví.
-- [ ] **Creator Studio:** Rozšířené rozhraní pro tvorbu postu (výběr typu: Kurz, Showcase, atd.).
-- [ ] **Monetizace:** Nastavení ceny za post (vlaštovky/CZK).
-- [ ] **Boost Mech:** Animace vyslání vlaštovky pro zviditelnění postu.
+## ✅ Roadmap
+- [x] **Initial Pivot UI:** Feed and Recipe details.
+- [ ] **Search & Explore:** Enhanced discovery for niche recipes.
+- [ ] **Chef Profiles:** Follow your favorite culinary creators.
+- [ ] **Shopping List Integration:** One-tap list generation.
 
 ---
-*Poslední aktualizace: 13. května 2026*
+*Last Updated: May 13, 2026*
