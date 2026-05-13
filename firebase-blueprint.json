@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "recipe": {
+      "title": "Recipe",
+      "description": "A culinary recipe",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "author": { "type": "string" },
+        "time": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"] },
+        "calories": { "type": "number" },
+        "rating": { "type": "number" },
+        "image": { "type": "string" },
+        "description": { "type": "string" },
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "instructions": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "image"]
+    },
+    "userLike": {
+      "title": "User Like",
+      "description": "A recipe liked by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "recipeId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "recipeId"]
+    }
+  },
+  "firestore": {
+    "/recipes/{recipeId}": {
+      "schema": "recipe",
+      "description": "Collection of available recipes"
+    },
+    "/users/{userId}/likes/{recipeId}": {
+      "schema": "userLike",
+      "description": "Recipes liked by a specific user"
+    }
+  }
+}

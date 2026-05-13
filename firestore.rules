@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Validation Helpers
+    function isValidRecipe(data) {
+      return data.title is string && data.title.size() <= 100 &&
+             data.category is string && data.category.size() <= 50 &&
+             data.image is string && data.image.size() <= 500 &&
+             data.time is string && data.time.size() <= 20 &&
+             data.difficulty in ['Easy', 'Medium', 'Hard'];
+    }
+
+    function isValidLike(data, userId) {
+      return data.userId == userId && 
+             isValidId(data.recipeId);
+    }
+
+    // 1. Recipes Collection (Public Read, Admin Write - for now just skeleton)
+    match /recipes/{recipeId} {
+      allow read: if true; // Publicly readable recipes
+      allow create: if isSignedIn() && isValidRecipe(incoming()); 
+      allow update, delete: if false; // Only admins or specific logic later
+    }
+
+    // 2. User Likes (Private to User)
+    match /users/{userId}/likes/{recipeId} {
+      allow read, list: if isOwner(userId);
+      allow create: if isOwner(userId) && 
+                      isValidLike(incoming(), userId) &&
+                      exists(/databases/$(database)/documents/recipes/$(recipeId));
+      allow delete: if isOwner(userId);
+    }
+  }
+}
